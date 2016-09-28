@@ -10,12 +10,11 @@ import requests
 from joblib import Parallel, delayed
 import multiprocessing
 
-num_cores = multiprocessing.cpu_count()
-
 parser = argparse.ArgumentParser(description='Submit realm data to artifactpower.info')
 parser.add_argument('--realm', required=True, help='Realm name')
 parser.add_argument('--region', required=True, help='Region (EU/US)')
 parser.add_argument('--verbose', '-v', action='store_true', default=False)
+parser.add_argument('--threads', '-t', type=Int, help='Amount of threads to use. Defaults to core count.')
 
 args = parser.parse_args()
 
@@ -23,6 +22,12 @@ if args.verbose:
    verbose=True
 else:
    verbose=False
+
+if args.threads:
+  threads = args.threads
+else:
+  threads = multiprocessing.cpu_count()
+
 
 realm=args.realm
 region=args.region
@@ -86,6 +91,6 @@ def submitToServer( char ):
 doPages()
 
 # submit the data to the website
-Parallel(n_jobs=num_cores)(delayed(submitToServer)(each) for each in chars)
+Parallel(n_jobs=threads)(delayed(submitToServer)(each) for each in chars)
 
 # vim: set sw=2 :
