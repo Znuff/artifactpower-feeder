@@ -15,7 +15,7 @@ parser.add_argument('--realm', required=True, help='Realm name')
 parser.add_argument('--region', required=True, help='Region (EU/US)')
 parser.add_argument('--verbose', '-v', action='store_true', default=False)
 parser.add_argument('--debug', '-d', action='store_true', default=False)
-parser.add_argument('--threads', '-t', type=Int, help='Amount of threads to use. Defaults to core count.')
+parser.add_argument('--threads', '-t', type=int, help='Amount of threads to use. Defaults to core count.')
 
 args = parser.parse_args()
 
