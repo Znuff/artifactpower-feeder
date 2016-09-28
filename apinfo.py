@@ -53,7 +53,7 @@ def grabPage(page):
   return r.text
 
 def extractNames(html):
-  soup = BeautifulSoup(html)
+  soup = BeautifulSoup(html, "html.parser")
   tags = soup.find_all('a', {"class" : "character"})
   if verbose:
     print('Extracted: ', end="")
