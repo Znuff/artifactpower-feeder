@@ -14,14 +14,20 @@ parser = argparse.ArgumentParser(description='Submit realm data to artifactpower
 parser.add_argument('--realm', required=True, help='Realm name')
 parser.add_argument('--region', required=True, help='Region (EU/US)')
 parser.add_argument('--verbose', '-v', action='store_true', default=False)
+parser.add_argument('--debug', '-d', action='store_true', default=False)
 parser.add_argument('--threads', '-t', type=Int, help='Amount of threads to use. Defaults to core count.')
 
 args = parser.parse_args()
 
 if args.verbose:
-   verbose=True
+  verbose=True
 else:
-   verbose=False
+  verbose=False
+
+if args.debug:
+  debug=True
+else:
+  debug=False
 
 if args.threads:
   threads = args.threads
@@ -38,6 +44,10 @@ def doPages():
   pages = range(0,435)
   for page in pages:
     html = grabPage(page)
+
+    if debug:
+      print('Debug: ' + html)
+
     extractNames(html)
 
 def grabPage(page):
@@ -51,8 +61,7 @@ def grabPage(page):
   }
 
   data = 'ajax=1'
-  if verbose:
-    print('Grabbing page ' + str(page+1) + ' from ' + region + '/' + realm)
+  print('Grabbing page ' + str(page+1) + ' from ' + region + '/' + realm)
   r = requests.post('http://www.wowprogress.com/gearscore/' + region.lower() + '/' + realm + '/char_rating/next/' + str(page-1), headers=headers, data=data)
   #todo - check if request succeeded
   return r.text
@@ -62,11 +71,15 @@ def extractNames(html):
   tags = soup.find_all('a', {"class" : "character"})
   if verbose:
     print('Extracted: ', end="")
+
   for elements in tags:
     name = elements.text
+
     if verbose:
       print(name + ", ", end="")
+
     chars.append(name.encode('utf-8'));
+
   if verbose:
     print('')
 
@@ -81,10 +94,11 @@ def submitToServer( char ):
 
   data = 'char=' + char + '&region=' + region.upper() + '&server=' + realm + '&exec='
   
-  if verbose:
-     print('Submitting ' + region + '/' + realm + '/' + char)
+  print('Submitting ' + region + '/' + realm + '/' + char)
   #todo - check if request succeeded
   r = requests.post('http://artifactpower.info/', headers=headers, data=data)
+  if debug:
+    print('Debug: ' + r.text)
 
 # scraping pages
 # todo - this should be also parallised, but I failed badly
