@@ -15,40 +15,12 @@ parser.add_argument('--realm', required=True, help='Realm name')
 parser.add_argument('--region', required=True, help='Region (EU/US)')
 parser.add_argument('--verbose', '-v', action='store_true', default=False)
 parser.add_argument('--debug', '-d', action='store_true', default=False)
-parser.add_argument('--threads', '-t', type=int, help='Amount of threads to use. Defaults to core count.')
-parser.add_argument('--delay', type=int, help='Delay submits by amount of seconds. Defaults to 0')
-parser.add_argument('--start', type=int, help='Start from page number. Defaults to 0.')
-parser.add_argument('--end', type=int, help='End at page number. Defaults to 435')
+parser.add_argument('--threads', '-t', type=int, default=multiprocessing.cpu_count(), help='Amount of threads to use. Defaults to core count.')
+parser.add_argument('--delay', type=int, default=0, help='Delay submits by amount of seconds. Defaults to 0')
+parser.add_argument('--start', type=int, default=0, help='Start from page number. Defaults to 0.')
+parser.add_argument('--end', type=int, default=435, help='End at page number. Defaults to 435')
 
 args = parser.parse_args()
-
-if args.verbose:
-  verbose=True
-else:
-  verbose=False
-
-if args.debug:
-  debug=True
-else:
-  debug=False
-
-if args.threads:
-  threads = args.threads
-else:
-  threads = multiprocessing.cpu_count()
-
-if args.delay:
-  delay = args.delay
-
-if args.start:
-  start = args.start
-else:
-  start = 0
-
-if args.end:
-  end = args.end
-else:
-  end = 435
 
 realm=args.realm
 region=args.region
@@ -56,11 +28,11 @@ region=args.region
 chars = []
 
 def doPages():
-  pages = range(start,end)
+  pages = range(args.start,args.end)
   for page in pages:
     html = grabPage(page)
 
-    if debug:
+    if args.debug:
       print('Debug: ' + html)
 
     extractNames(html)
@@ -84,18 +56,18 @@ def grabPage(page):
 def extractNames(html):
   soup = BeautifulSoup(html, "html.parser")
   tags = soup.find_all('a', {"class" : "character"})
-  if verbose:
+  if args.verbose:
     print('Extracted: ', end="")
 
   for elements in tags:
     name = elements.text
 
-    if verbose:
+    if args.verbose:
       print(name + ", ", end="")
 
     chars.append(name.encode('utf-8'));
 
-  if verbose:
+  if args.verbose:
     print('')
 
 def submitToServer( char ):
@@ -112,9 +84,8 @@ def submitToServer( char ):
   print('Submitting ' + region + '/' + realm + '/' + char)
   #todo - check if request succeeded
   r = requests.post('http://artifactpower.info/', headers=headers, data=data)
-  if delay:
-    time.sleep(delay)
-  if debug:
+  time.sleep(args.delay)
+  if args.debug:
     print('Debug: ' + r.text)
 
 # scraping pages
@@ -122,6 +93,6 @@ def submitToServer( char ):
 doPages()
 
 # submit the data to the website
-Parallel(n_jobs=threads)(delayed(submitToServer)(each) for each in chars)
+Parallel(n_jobs=args.threads)(delayed(submitToServer)(each) for each in chars)
 
 # vim: set sw=2 :
