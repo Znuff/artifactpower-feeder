@@ -5,7 +5,7 @@ from __future__ import print_function
 from bs4 import BeautifulSoup
 import argparse
 import requests
-
+import time
 
 from joblib import Parallel, delayed
 import multiprocessing
@@ -16,6 +16,9 @@ parser.add_argument('--region', required=True, help='Region (EU/US)')
 parser.add_argument('--verbose', '-v', action='store_true', default=False)
 parser.add_argument('--debug', '-d', action='store_true', default=False)
 parser.add_argument('--threads', '-t', type=int, help='Amount of threads to use. Defaults to core count.')
+parser.add_argument('--delay', type=int, help='Delay submits by amount of seconds. Defaults to 0')
+parser.add_argument('--start', type=int, help='Start from page number. Defaults to 0.')
+parser.add_argument('--end', type=int, help='End at page number. Defaults to 435')
 
 args = parser.parse_args()
 
@@ -34,6 +37,18 @@ if args.threads:
 else:
   threads = multiprocessing.cpu_count()
 
+if args.delay:
+  delay = args.delay
+
+if args.start:
+  start = args.start
+else:
+  start = 0
+
+if args.end:
+  end = args.end
+else:
+  end = 435
 
 realm=args.realm
 region=args.region
@@ -41,7 +56,7 @@ region=args.region
 chars = []
 
 def doPages():
-  pages = range(0,435)
+  pages = range(start,end)
   for page in pages:
     html = grabPage(page)
 
@@ -97,6 +112,8 @@ def submitToServer( char ):
   print('Submitting ' + region + '/' + realm + '/' + char)
   #todo - check if request succeeded
   r = requests.post('http://artifactpower.info/', headers=headers, data=data)
+  if delay:
+    time.sleep(delay)
   if debug:
     print('Debug: ' + r.text)
 
